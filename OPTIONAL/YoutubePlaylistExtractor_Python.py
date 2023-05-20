@@ -4,7 +4,7 @@ from PyQt5.QtGui import QClipboard
 from PyQt5.QtCore import Qt, QTimer
 import sys
 import youtube_dl
-
+ 
 class MyApp(QWidget):
     def __init__(self):
         super().__init__()
