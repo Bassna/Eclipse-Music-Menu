@@ -62,6 +62,11 @@ You can manually add music to your library by adding each line as: `ArtistName, 
 
 🎵 Enjoy your music with the Eclipse Music Menu! 🎵
 
+
+## Troubleshooting
+It's not opening GTA5.exe -  Try to 'Run as Administrator'.  Right click > Run as admin. 
+
+
 ## Optional Folder 
 
 In the `OPTIONAL` folder, you'll find:
