@@ -14,7 +14,7 @@ The Music Menu allows you to:
 - Control song playback across multiple speakers.
 - Adjust the app's size and transparency.
 
-![Search](https://github.com/Bassna/Eclipse-Music-Menu/assets/33616653/8cd790b9-a270-4779-a5bf-8b887e3ac447)
+![Search](https://i.imgur.com/ekXrJRF.gif)
 
 
 **See it in action:**
@@ -53,7 +53,7 @@ The Full Size and Compact Music Window provide various functionalities:
 - **Sound and Display Settings**: *Adjust the volume, transparency, and size of the app.*
 
 
-![HotItWorks](https://github.com/Bassna/Eclipse-Music-Menu/assets/33616653/8f393da7-18be-4ee7-9f2d-5da5c648497f)
+![HotItWorks](https://i.imgur.com/D6Pgjla.gif)
 
 
 ## Adding Music to Your Library
