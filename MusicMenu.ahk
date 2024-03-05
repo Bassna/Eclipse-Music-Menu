@@ -4,6 +4,7 @@ SetWorkingDir %A_ScriptDir%       ; Sets the working directory of the script to 
 #Persistent                       ; Keeps the script running even after the auto-execute section has finished.
 
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 global Application := "GTA5.exe" ; Change this to the game or application you want to use. GTA5.exe for Eclipse, notepad.exe is good for testing.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -366,7 +367,9 @@ FullSizeGui:
     ; Perform an initial search to populate the ListView
     Gosub, SearchAll
 
+
     ; Sets the curser on the search bar by default
+
     GuiControl, Focus, Query
 return
 
@@ -1107,7 +1110,7 @@ SearchAll:
     
         ; Add the line to the ListView if it matches the search query
         if (Query == "" or InStr(fields[1], Query) or InStr(fields[2], Query) or InStr(fields[3], Query))
-            LV_Add("", fields[1], fields[2], fields[3], fields[4], fields[5], favDisplay)  ; Modify this line
+            LV_Add("", fields[1], fields[2], fields[3], fields[4], fields[5], favDisplay)  
     }
     
     ; Sort the ListView by the "favorite" column
@@ -1122,8 +1125,8 @@ AddResultsToListView(results) {
     GuiControl, -Redraw, MusicList
     LV_Delete()
     for _, songObj in results {
-        favDisplay := songObj.favorite != "0" ? "*" : ""  ; Add this line
-        LV_Add("", songObj.artist, songObj.album, songObj.song, songObj.link, songObj.favorite, favDisplay)  ; Modify this line
+        favDisplay := songObj.favorite != "0" ? "*" : ""  
+        LV_Add("", songObj.artist, songObj.album, songObj.song, songObj.link, songObj.favorite, favDisplay)  
     }
     
 }
@@ -1137,12 +1140,22 @@ SelectSongFromListView(eventType:="") {
         return
     }
 
+    ; Initialize the link to send
+    linkToSend := ""
+
     ; If the Enter key was pressed, get the number of the focused row in the ListView and then retrieve the link in the 4th column of that row.
     if (eventType == "Enter") {
         focusedRow := LV_GetNext(0, "Focused")
-        LV_GetText(linkToSend, focusedRow, 4) 
+        
+        ; Check if a row is focused
+        if (focusedRow) {
+            LV_GetText(linkToSend, focusedRow, 4)
+        }
     } else {  ; If the user action was a double click, retrieve the link in the 4th column of the row that was double clicked.
-        LV_GetText(linkToSend, A_EventInfo, 4) 
+        ; Check if a row is double clicked
+        if (A_EventInfo) {
+            LV_GetText(linkToSend, A_EventInfo, 4)
+        }
     }
 
     ; If a link was retrieved, activate the window of the application and send the link to it.
@@ -1165,6 +1178,7 @@ SelectSongFromListView(eventType:="") {
         Gosub, CheckTickBoxAndClose
     }
 }
+
 
 
 ; Check if the GUI should be closed after a song selection
@@ -1686,7 +1700,7 @@ return
 SendWithDelay(TextToSend)
 {
     SendInput, t
-    Sleep, 15
+    Sleep, 100
     SendInput, %TextToSend%
     Sleep, 15
     SendInput, {Enter}
