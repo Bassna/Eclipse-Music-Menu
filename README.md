@@ -14,7 +14,7 @@ The Music Menu allows you to:
 - Control song playback across multiple speakers.
 - Adjust the app's size and transparency.
 
-![Search](https://i.imgur.com/ekXrJRF.gif)
+![Search](https://i.imgur.com/UDIpPwk.gif)
 
 
 **See it in action:**
