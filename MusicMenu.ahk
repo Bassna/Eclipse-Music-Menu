@@ -57,9 +57,13 @@ LoadTXTFileAndGenerateMenu:
     if (fileObj.Length() = 0) { ; If the file is empty
         fileObj.Close() ; Close the file in read mode
         fileObj := FileOpen(txtFilePath, "a") ; Open the file in append mode
-        fileObj.WriteLine("Rick Astley, Whenever You Need Somebody, Never Gonna Give You Up, https://www.youtube.com/watch?v=dQw4w9WgXcQ, 1") ; Line 1
-        fileObj.WriteLine("Lonley Island, Favorites Playlist 01, Threw It On The Ground, https://www.youtube.com/watch?v=gAYL5H46QnQ, 0") ; Line 2
-        fileObj.WriteLine("Redbone, Wovoka, Come and Get Your Love, https://www.youtube.com/watch?v=bc0KhhjJP98, 0") ; Line 3
+        fileObj.WriteLine("Arcadius Loans, NoAlbum, Funds, https://www.youtube.com/watch?v=566c4MBFowo, 1") 
+        fileObj.WriteLine("Club Arcadius, NoAlbum, Bass Drops in the Night, https://www.youtube.com/watch?v=566c4MBFowo, 1") 
+        fileObj.WriteLine("Club Arcadius, NoAlbum, Nightlife Pulse, https://www.youtube.com/watch?v=eQ8jF0ZuGpQ, 1") 
+        fileObj.WriteLine("Los Santos Customs, NoAlbum, Fix it Up, https://www.youtube.com/watch?v=sAhkXc7aWQc, 1") 
+        fileObj.WriteLine("Rick Astley, Whenever You Need Somebody, Never Gonna Give You Up, https://www.youtube.com/watch?v=dQw4w9WgXcQ, 0") 
+        fileObj.WriteLine("Lonley Island, Favorites Playlist 01, Threw It On The Ground, https://www.youtube.com/watch?v=gAYL5H46QnQ, 0") 
+        fileObj.WriteLine("Redbone, Wovoka, Come and Get Your Love, https://www.youtube.com/watch?v=bc0KhhjJP98, 0") 
         fileObj.Close() ; Close the file in append mode
     } else {
         fileObj.Close() ; Close the file if it's not empty
