@@ -1,4 +1,4 @@
-﻿#NoEnv                            ; Disables the automatic inclusion of parent environment variables in the script.
+#NoEnv                            ; Disables the automatic inclusion of parent environment variables in the script.
 SetWorkingDir %A_ScriptDir%       ; Sets the working directory of the script to the directory containing the script itself.
 #SingleInstance Force             ; Ensures that only a single instance of the script is allowed to run at any given time.
 #Persistent                       ; Keeps the script running even after the auto-execute section has finished.
@@ -27,7 +27,7 @@ global GUITransparency := 255, TransparencySlider
 global HandleDragOrResizeText, IsResizing := 0
 
 ; Global Variables - User Settings
-global SpeakerNumberSet, tickboxState := 0, tickboxStateCompact := 0, closeOnSelectState := 0
+global SpeakerNumberSet, tickboxState := 0, tickboxStateCompact := 0, closeOnSelectState := 0, tvToggleState := 0
 global vMusicVolume := 100
 
 ; Global Variables - Search and URL Handling
@@ -175,6 +175,10 @@ F3::
     }
 return
 
+; The Shift + F3 hotkey plays a random TV media link.
++F3::
+    Gosub RandomTVMedia ; Go to RandomTVMedia subroutine
+Return
 
 ; The CTRL+F3 hotkey plays a random car song. These can also be changed to other hotkeys if required.
 ^F3::  
@@ -188,14 +192,15 @@ Return
 Return
 
 
-; The SHIFT+F3 hotkey toggles between Full size and Compact size menus. These can also be changed to other hotkeys if required.
-+F3::
+; The Ctrl + Alt + F3 hotkey toggles between Full size and Compact size menus.
+^!F3::
     ; Check if activeGuiName is not empty
     if (activeGuiName != "") {
         tickboxStateCompact := !tickboxStateCompact
         Gosub, ToggleCompactMode
     }
 return
+
 
 
 ; The F12 hotkey activates the killswitch, which stops all current actions and terminates the script. These can also be changed to other hotkeys if required.
@@ -288,13 +293,14 @@ FullSizeGui:
     Gui, FullSizeGui:Font, s9, Segoe UI Semibold
     Gui, Add, Button, x160 y50 w40 h20 gStopSong, Stop
 
-    ; Add a checkbox to control visibility of the speaker number input box and label
-    Gui, Add, CheckBox, x210 y56 vCheckboxVar gShowHideInput Checked%tickboxState%, Speaker
+    ; Add checkboxes to control visibility of the speaker number input box and label, and TV toggle
+    Gui, Add, CheckBox, x210 y40 vCheckboxVar gShowHideInput Checked%tickboxState%, Speaker
+    Gui, Add, CheckBox, x210 y56 vTVToggle gTVToggleSwitch Checked%tvToggleState%, TV
 
     ; Add the input box with system default font
-    Gui, FullSizeGui:Font, s8, Microsoft Sans Serif
-    Gui, Add, Edit, x276 y52 w30 h20 vAdditionalInput +WantReturn, %SpeakerNumberSet%
-    Gui, FullSizeGui:Font, s9, Segoe UI Semibold
+;    Gui, FullSizeGui:Font, s8, Microsoft Sans Serif
+;    Gui, Add, Edit, x276 y36 w30 h20 vAdditionalInput +WantReturn, %SpeakerNumberSet%
+;    Gui, FullSizeGui:Font, s9, Segoe UI Semibold
 
     ; Add sliders to control music volume and GUI transparency
     Gui, Add, Slider, x588 y26 w100 h20 ToolTip Thick19 vMusicVolume Range0-100 gSetMusicVolumeDelayed
@@ -309,7 +315,7 @@ FullSizeGui:
     ; Add labels for sliders, controls and a text prompt for song search
     Gui, Add, Text, x542 y30, Volume:
     Gui, Add, Text, x522 y56, Transparent:
-    Gui, Add, Text, x196 y22, Enter song, artist, or album:
+    Gui, Add, Text, x196 y18, Enter song, artist, or album:
 
     ; Add hidden OK button, ListView to display songs, and a text box for song search
     Gui, Add, Button, Hidden Default gButtonOK, OK
@@ -361,6 +367,12 @@ FullSizeGui:
         Gui, Show, x%fullSizeGuiX% y%fullSizeGuiY% w%fullSizeGuiW% h%fullSizeGuiH%, Music Menu
     }
 
+    ; Ensure only one of the Speaker or TV checkboxes is checked
+    if (tickboxState && tvToggleState) {
+        tvToggleState := 0
+        GuiControl, , TVToggle, %tvToggleState%
+    }
+
     ; Set the initial transparency for the main GUI
     SetGuiTransparency("FullSizeGui", GUITransparency)
 
@@ -372,6 +384,7 @@ FullSizeGui:
 
     GuiControl, Focus, Query
 return
+
 
 
 ; This function handles the "AddFavorite" command, which is triggered when the user wants to mark a song as favorite or remove it from favorites.
@@ -475,6 +488,19 @@ return
 ; This function switches the GUI between full size and compact modes.
 ToggleCompactMode:
     GuiControlGet, tickboxStateCompact, , CheckboxVar2 ; Fetch the current state of the compact mode toggle
+    GuiControlGet, tickboxState, , CheckboxVar ; Fetch the state of the Speaker checkbox
+    GuiControlGet, tvToggleState, , TVToggle ; Fetch the state of the TV checkbox
+
+    ; Ensure only one of the Speaker or TV checkboxes is checked
+    if (tickboxState && tvToggleState) {
+        if (tickboxStateCompact) {
+            tvToggleState := 0
+            GuiControl, , TVToggle, %tvToggleState%
+        } else {
+            tickboxState := 0
+            GuiControl, , CheckboxVar, %tickboxState%
+        }
+    }
 
     ; If compact mode is currently enabled
     if (tickboxStateCompact) {
@@ -489,6 +515,10 @@ ToggleCompactMode:
         Gui, FullSizeGui:Destroy ; Destroy the current main GUI
 
         CompactGui() ; Create the compact GUI
+
+        ; Restore the checkbox states in the compact GUI
+        GuiControl, , CheckboxVar, %tickboxState%
+        GuiControl, , TVToggle, %tvToggleState%
     } 
     else {
         ; If compact mode is currently disabled
@@ -505,6 +535,10 @@ ToggleCompactMode:
 
         ; Open the main GUI
         Gosub, FullSizeGui 
+
+        ; Restore the checkbox states in the full-size GUI
+        GuiControl, , CheckboxVar, %tickboxState%
+        GuiControl, , TVToggle, %tvToggleState%
 
         ; Reset the 'tickboxStateCompact' variable when transitioning from CompactGUI to FullSizeGui
         tickboxStateCompact := 0
@@ -547,12 +581,14 @@ CompactGui() {
 
     ; Add Compact Mode and "Always On Top" toggles
     Gui, Add, CheckBox, x260 y42 vCheckboxVar2 gToggleCompactMode Checked%tickboxStateCompact%, Compact
-    Gui, Add, CheckBox, x112 y42 vCheckboxVar gShowHideInput Checked%tickboxState%, Speaker
+    Gui, Add, CheckBox, x112 y28 vCheckboxVar gShowHideInput Checked%tickboxState%, Speaker
+    Gui, Add, CheckBox, x112 y42 vTVToggle gTVToggleSwitch Checked%tvToggleState%, TV
 
     ; Add an additional input box (with its font and label)
-    Gui, CompactGui:Font, s8, Microsoft Sans Serif
-    Gui, Add, Edit, x142 y8 w30 h20 vAdditionalInput +WantReturn, %SpeakerNumberSet%
-    Gui, CompactGui:Font, s8, Segoe UI Semibold
+;    Gui, CompactGui:Font, s8, Microsoft Sans Serif
+;    Gui, Add, Edit, x142 y8 w30 h20 vAdditionalInput +WantReturn, %SpeakerNumberSet%
+;    Gui, CompactGui:Font, s8, Segoe UI Semibold
+
 
     ; Add a checkbox for keeping the GUI open after a song is selected
     Gui, Add, CheckBox, x178 y42 vCloseOnSelectVar gToggleCloseOnSelect Checked%closeOnSelectState%, Keep Open
@@ -563,6 +599,12 @@ CompactGui() {
         GuiControl, Hide, AdditionalInput
     }
 
+    ; Ensure only one of the Speaker or TV checkboxes is checked
+    if (tickboxState && tvToggleState) {
+        tvToggleState := 0
+        GuiControl, , TVToggle, %tvToggleState%
+    }
+    
     ; Add volume and transparency sliders
     Gui, Add, Text, x202 y6, Volume:
     Gui, Add, Slider, x246 y3 w80 w80 h18 Tooltip Thick18 vMusicVolume Range0-100 gSetMusicVolumeDelayed
@@ -1062,6 +1104,12 @@ ShowHideInput:
     ; Get the state of the checkbox
     tickboxState := CheckboxVar
     
+    ; Uncheck TV checkbox if Speaker checkbox is checked
+    if (CheckboxVar) {
+        GuiControl, , TVToggle, 0
+        tvToggleState := 0
+    }
+
     ; Show or hide the input box and label based on the checkbox state
     if (CheckboxVar) {
         GuiControl, Show, AdditionalInput
@@ -1073,6 +1121,22 @@ ShowHideInput:
     }
 return
 
+; Function to handle TV toggle switch
+TVToggleSwitch:
+    ; Update the GUI controls
+    Gui, Submit, NoHide
+
+    ; Get the state of the checkbox
+    tvToggleState := TVToggle
+
+    ; Uncheck Speaker checkbox if TV checkbox is checked
+    if (TVToggle) {
+        GuiControl, , CheckboxVar, 0
+        tickboxState := 0
+        GuiControl, Hide, AdditionalInput
+        GuiControl, Hide, SpeakerLabel
+    }
+return
 
 ; Detect Enter key press in ListView and call SelectSongFromListView function
 ButtonOK:
@@ -1163,14 +1227,16 @@ SelectSongFromListView(eventType:="") {
         WinActivate, ahk_exe %Application%
         Gui, FullSizeGui:Submit, NoHide  ; Save the current state of the GUI without hiding it.
 
-        ; Get the current state of the checkbox.
+        ; Get the current state of the checkboxes.
         GuiControlGet, CheckboxVar, , CheckboxVar
+        GuiControlGet, TVToggle, , TVToggle
 
-        ; If the checkbox is checked, get the number of the speaker set by the user and send the link to that speaker.
-        if (CheckboxVar) {
-            GuiControlGet, SpeakerNumberSet, , AdditionalInput
-            SendWithDelay("/speakerurl " . SpeakerNumberSet . " " . linkToSend)
-        } else {  ; If the checkbox is not checked, send the link without specifying a speaker.
+        ; If the TV checkbox is checked, send the link to the TV.
+        if (TVToggle) {
+            SendWithDelay("/CinemaAddQueue " . linkToSend)
+        } else if (CheckboxVar) {  ; If the Speaker checkbox is checked, just send the link without opening chat.
+            SendWithDelay(linkToSend, false)
+        } else {  ; If no checkbox is checked, send the link with chat command for car speakers.
             SendWithDelay("/carurl " . linkToSend)
         }
 
@@ -1216,7 +1282,9 @@ SongSelection:
     linkToSend := linkStorage[song]
     Gui, FullSizeGui:Submit, NoHide
     if (CheckboxVar) {
-        SendWithDelay("/speakerurl " . SpeakerNumberSet . " " . linkToSend)
+        SendWithDelay(linkToSend, false)
+    } else if (TVToggle) {
+        SendWithDelay("/CinemaAddQueue " . linkToSend)
     } else {
         SendWithDelay("/carurl " . linkToSend)
     }
@@ -1629,10 +1697,9 @@ RandomSong:
     ; Check if the "Speaker" checkbox is checked
     GuiControlGet, SpeakerChecked, , Speaker
     if (SpeakerChecked == 1) {
-        GuiControlGet, SpeakerNumberSet, , AdditionalInput
-        SendWithDelay("/speakerurl " . SpeakerNumberSet . " " . randomLink)
+        SendWithDelay(randomLink, false)
     } else {
-        ; Send the random link
+        ; Send the random link with chat command for car speakers
         SendWithDelay("/carurl " . randomLink)
     }
 return
@@ -1665,6 +1732,26 @@ RandomCarSong:
     SendWithDelay("/carurl " randomLink)
 return
 
+; Random TV media selection handler
+RandomTVMedia:
+    WinActivate, ahk_exe %Application%
+    ; Get all keys from the linkStorage object
+    keys := []
+    for key in linkStorage {
+        keys.push(key)
+    }
+
+    ; Get a random key from the keys array
+    randomIndex := Rand(1, keys.Length())
+    randomKey := keys[randomIndex]
+
+    ; Get the link corresponding to the random key
+    randomLink := linkStorage[randomKey]
+
+    ; Send the random link using CinemaAddQueue
+    SendWithDelay("/CinemaAddQueue " randomLink)
+return
+
 
 ; Random song selection handler
 RandomSpeakerSong:
@@ -1682,11 +1769,8 @@ RandomSpeakerSong:
     ; Get the link corresponding to the random key
     randomLink := linkStorage[randomKey]
 
-    ; Get the speaker number from the AdditionalInput field
-    GuiControlGet, SpeakerNumberSet, , AdditionalInput
-
-    ; Send the random link using speakerurl
-    SendWithDelay("/speakerurl " . SpeakerNumberSet . " " . randomLink)
+    ; Just send the random link directly without chat
+    SendWithDelay(randomLink, false)
 return
 
 
@@ -1696,11 +1780,13 @@ GuiClose:
 return
 
 
-; Function for sending text with a 15ms delay after the text and then pressing Enter
-SendWithDelay(TextToSend)
+; Function for sending text with an optional delay and option to avoid sending "t"
+SendWithDelay(TextToSend, sendT := true)
 {
-    SendInput, t
-    Sleep, 100
+    if (sendT) {
+        SendInput, t
+        Sleep, 50
+    }
     SendInput, %TextToSend%
     Sleep, 15
     SendInput, {Enter}
