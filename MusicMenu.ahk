@@ -1656,21 +1656,27 @@ DeleteSongFromTXT(artist, album, song, link) {
 }
 
 
-; Stop Current Song
+; Updated Stop Current Song function to handle TV and Speaker checkbox logic
 StopSong:
     ; Activates the window of the specified application
     WinActivate, ahk_exe %Application%
-    ; If the CheckboxVar variable is true
-    if (CheckboxVar) {
-        ; Get the text of the AdditionalInput control and store it in SpeakerNumberSet
-        GuiControlGet, SpeakerNumberSet, , AdditionalInput
-        ; Call the SendWithDelay function with the specified string
-        SendWithDelay("/speakerurl " . SpeakerNumberSet . "  https://www.youtube.com/watch?v=Vbks4abvLEw ")
+    
+    ; Get the current state of the checkboxes
+    GuiControlGet, CheckboxVar, , CheckboxVar
+    GuiControlGet, TVToggle, , TVToggle
+
+    ; If the TV checkbox is checked, just stop the TV media without sending "t"
+    if (TVToggle) {
+        SendWithDelay("/CinemaStopQueue", false)
+    } else if (CheckboxVar) {
+        ; No need to send Speaker number or speakerurl anymore, just stop the speaker media
+        SendWithDelay("https://www.youtube.com/watch?v=Vbks4abvLEw", false)
     } else {
-        ; Call the SendWithDelay function with the specified string
-        SendWithDelay("/carurl")
+        ; For car speakers, just stop the media
+        SendWithDelay("/carurl", false)
     }
 return
+
 
 
 ; Function to generate a random number between min and max (inclusive)
@@ -1682,7 +1688,7 @@ Rand(min, max) {
 }
 
 
-; Random song selection handler
+; Updated RandomSong handler
 RandomSong:
     WinActivate, ahk_exe %Application%
     ; Get all keys from the linkStorage object
@@ -1700,7 +1706,10 @@ RandomSong:
 
     ; Check if the "Speaker" checkbox is checked
     GuiControlGet, SpeakerChecked, , Speaker
-    if (SpeakerChecked == 1) {
+    GuiControlGet, TVToggle, , TVToggle
+    if (TVToggle) {
+        SendWithDelay("/CinemaAddQueue " randomLink)
+    } else if (SpeakerChecked == 1) {
         SendWithDelay(randomLink, false)
     } else {
         ; Send the random link with chat command for car speakers
@@ -1784,9 +1793,15 @@ GuiClose:
 return
 
 
-; Function for sending text with an optional delay and option to avoid sending "t"
+; Updated SendWithDelay function to handle TV checkbox
 SendWithDelay(TextToSend, sendT := true)
 {
+    ; Get the current state of the TV checkbox
+    GuiControlGet, TVToggle, , TVToggle
+    if (TVToggle) {
+        sendT := false  ; Do not send "t" if TV is toggled
+    }
+
     if (sendT) {
         SendInput, t
         Sleep, 50
