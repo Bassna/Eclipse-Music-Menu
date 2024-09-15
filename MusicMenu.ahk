@@ -1201,8 +1201,8 @@ AddResultsToListView(results) {
 
 
 ; This function is responsible for selecting a song from the ListView based on user actions (Enter key or double click).
-SelectSongFromListView(eventType:="") {
-
+SelectSongFromListView(eventType:="")
+{
     ; If eventType is not "Enter" and the action that triggered this function is not a double click, exit the function.
     if (eventType != "Enter" && A_GuiEvent != "DoubleClick") {
         return
@@ -1235,9 +1235,9 @@ SelectSongFromListView(eventType:="") {
         GuiControlGet, CheckboxVar, , CheckboxVar
         GuiControlGet, TVToggle, , TVToggle
 
-        ; If the TV checkbox is checked, send the link to the TV.
+        ; If the TV checkbox is checked, send just the link without additional commands.
         if (TVToggle) {
-            SendWithDelay("/CinemaAddQueue " . linkToSend)
+            SendWithDelay(linkToSend, false)
         } else if (CheckboxVar) {  ; If the Speaker checkbox is checked, just send the link without opening chat.
             SendWithDelay(linkToSend, false)
         } else {  ; If no checkbox is checked, send the link with chat command for car speakers.
@@ -1285,11 +1285,17 @@ SongSelection:
     song := A_ThisMenuItem
     linkToSend := linkStorage[song]
     Gui, FullSizeGui:Submit, NoHide
-    if (CheckboxVar) {
+
+    ; Get the current state of the checkboxes
+    GuiControlGet, CheckboxVar, , CheckboxVar
+    GuiControlGet, TVToggle, , TVToggle
+
+    ; If the TV checkbox is checked, send just the link without additional commands
+    if (TVToggle) {
         SendWithDelay(linkToSend, false)
-    } else if (TVToggle) {
-        SendWithDelay("/CinemaAddQueue " . linkToSend)
-    } else {
+    } else if (CheckboxVar) {  ; If the Speaker checkbox is checked, just send the link without opening chat
+        SendWithDelay(linkToSend, false)
+    } else {  ; If no checkbox is checked, send the link with chat command for car speakers
         SendWithDelay("/carurl " . linkToSend)
     }
 return
@@ -1688,7 +1694,7 @@ Rand(min, max) {
 }
 
 
-; Updated RandomSong handler
+; Updated RandomSong handler to remove /CinemaAddQueue for TV
 RandomSong:
     WinActivate, ahk_exe %Application%
     ; Get all keys from the linkStorage object
@@ -1704,11 +1710,13 @@ RandomSong:
     ; Get the link corresponding to the random key
     randomLink := linkStorage[randomKey]
 
-    ; Check if the "Speaker" checkbox is checked
+    ; Check if the "Speaker" or "TV" checkbox is checked
     GuiControlGet, SpeakerChecked, , Speaker
     GuiControlGet, TVToggle, , TVToggle
+
+    ; If TV is toggled, just send the link directly
     if (TVToggle) {
-        SendWithDelay("/CinemaAddQueue " randomLink)
+        SendWithDelay(randomLink, false)
     } else if (SpeakerChecked == 1) {
         SendWithDelay(randomLink, false)
     } else {
@@ -1716,6 +1724,7 @@ RandomSong:
         SendWithDelay("/carurl " . randomLink)
     }
 return
+
 
 
 ; Exit the script
@@ -1761,8 +1770,8 @@ RandomTVMedia:
     ; Get the link corresponding to the random key
     randomLink := linkStorage[randomKey]
 
-    ; Send the random link using CinemaAddQueue
-    SendWithDelay("/CinemaAddQueue " randomLink)
+    ; Send the random link directly
+    SendWithDelay(randomLink, false)
 return
 
 
