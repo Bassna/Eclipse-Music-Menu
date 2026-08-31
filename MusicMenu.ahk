@@ -6,7 +6,7 @@ SetWorkingDir %A_ScriptDir%       ; Sets the working directory of the script to 
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-global Application := "GTA5.exe" ; Change this to the game or application you want to use. GTA5.exe for Eclipse, notepad.exe is good for testing.
+global Application := "FiveM_b3751_GTAProcess.exe" ; Change this to the game or application you want to use. GTA5.exe for Eclipse, notepad.exe is good for testing.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -1812,9 +1812,15 @@ SendWithDelay(TextToSend, sendT := true)
     }
 
     if (sendT) {
-        SendInput, t
+        ; FiveM's chat is a NUI field. Send a real key press and allow the
+        ; chat UI time to receive focus before sending the message.
+        Sleep, 150
+        SendEvent, {t down}
+        Sleep, 75
+        SendEvent, {t up}
         Sleep, 50
     }
+    ; Send the message and submit it at the original high speed.
     SendInput, %TextToSend%
     Sleep, 15
     SendInput, {Enter}
